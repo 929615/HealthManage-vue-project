@@ -49,6 +49,170 @@
         <p class="mt-2 text-base text-gray-500 dark:text-gray-400">全面了解您的健康状况和趋势变化</p>
       </div>
 
+      <!-- 用户信息录入弹窗 -->
+      <Transition name="fade">
+        <div v-if="showUserInfoDialog"
+          class="fixed inset-0 z-50 overflow-y-auto bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+          <div class="w-full max-w-3xl bg-white rounded-lg overflow-hidden shadow-2xl" @click.stop>
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-200 p-4">
+              <h2 class="text-lg font-semibold text-gray-800">录入个人健康信息</h2>
+              <Button type="text" :icon="Close" @click="closeUserInfoDialog" aria-label="关闭"
+                class="text-gray-500 hover:text-gray-700"></Button>
+            </div>
+
+            <form @submit.prevent="submitUserInfoForm" class="space-y-6 max-h-[70vh] overflow-y-auto p-4">
+              <!-- 表单内容 -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- 基本信息 -->
+                <div class="lg:col-span-3 p-3 bg-blue-50 rounded-lg mb-2">
+                  <h3 class="text-sm font-medium text-blue-800 mb-3">基本信息</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <InputField v-model="userInfoForm.name" label="姓名" placeholder="请输入姓名" :error="!!formErrors.name"
+                      :errorMessage="formErrors.name" required />
+                    <InputField v-model.number="userInfoForm.age" type="number" label="年龄" placeholder="请输入年龄"
+                      :error="!!formErrors.age" :errorMessage="formErrors.age" required />
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">性别 <span
+                          class="text-red-500">*</span></label>
+                      <select v-model="userInfoForm.gender" required
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm">
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="其他">其他</option>
+                      </select>
+                      <p v-if="formErrors.gender" class="mt-1 text-xs text-red-600">{{ formErrors.gender }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 身体指标 - 添加文字描述 -->
+                <div class="lg:col-span-3 p-3 bg-green-50 rounded-lg mb-2">
+                  <h3 class="text-sm font-medium text-green-800 mb-3">身体指标</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <InputField v-model.number="userInfoForm.height" type="number" step="0.1" label="身高 (cm)"
+                        placeholder="请输入身高" :error="!!formErrors.height" :errorMessage="formErrors.height" required />
+                      <p class="text-xs text-gray-500 mt-1">正常成人身高范围：150-200cm</p>
+                    </div>
+                    <div>
+                      <InputField v-model.number="userInfoForm.weight" type="number" step="0.1" label="体重 (kg)"
+                        placeholder="请输入体重" :error="!!formErrors.weight" :errorMessage="formErrors.weight" required />
+                      <p class="text-xs text-gray-500 mt-1">体重标准：BMI指数18.5-24.9</p>
+                    </div>
+                    <div>
+                      <InputField v-model.number="userInfoForm.heartRate" type="number" label="心率 (次/分)"
+                        placeholder="例如: 75" />
+                      <p class="text-xs text-gray-500 mt-1">正常心率范围：60-100次/分</p>
+                    </div>
+                    <div>
+                      <InputField v-model="userInfoForm.bloodPressure" label="血压" placeholder="例如: 120/80 mmHg" />
+                      <p class="text-xs text-gray-500 mt-1">正常血压：120/80 mmHg</p>
+                    </div>
+                    <div>
+                      <InputField v-model="userInfoForm.bloodSugar" label="血糖" placeholder="例如: 5.5 mmol/L" />
+                      <p class="text-xs text-gray-500 mt-1">空腹血糖：3.9-6.1 mmol/L</p>
+                    </div>
+                    <div>
+                      <InputField v-model="userInfoForm.bloodLipid" label="血脂" placeholder="例如: 正常/偏高" />
+                      <p class="text-xs text-gray-500 mt-1">总胆固醇应低于5.2 mmol/L</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 生活习惯 -->
+                <div class="lg:col-span-3 p-3 bg-yellow-50 rounded-lg">
+                  <h3 class="text-sm font-medium text-yellow-800 mb-3">生活习惯</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <InputField v-model.number="userInfoForm.sleepDuration" type="number" step="0.5" label="睡眠时长 (h)"
+                        placeholder="例如: 8" />
+                      <p class="text-xs text-gray-500 mt-1">成人推荐睡眠：7-9小时/天</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">睡眠质量</label>
+                      <div class="flex space-x-4 mt-2">
+                        <label v-for="q in sleepQualityOptions" :key="q.value"
+                          class="inline-flex items-center cursor-pointer">
+                          <input type="radio" class="form-radio text-primary focus:ring-primary border-gray-300 rounded"
+                            v-model.number="userInfoForm.sleepQuality" :value="q.value">
+                          <span class="ml-2 text-sm text-gray-700">{{ q.label }}</span>
+                        </label>
+                      </div>
+                      <p v-if="formErrors.sleepQuality" class="mt-1 text-xs text-red-600">{{ formErrors.sleepQuality }}</p>
+                    </div>
+                    <div>
+                      <InputField v-model.number="userInfoForm.waterConsumption" type="number" label="饮水量 (ml)"
+                        placeholder="例如: 1500" />
+                      <p class="text-xs text-gray-500 mt-1">建议：1500-2000ml/天</p>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                      <label class="text-sm font-medium text-gray-700 cursor-pointer select-none flex items-center">
+                        <input type="checkbox" v-model="userInfoForm.smoking"
+                          class="form-checkbox h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary">
+                        <span class="ml-2">吸烟</span>
+                      </label>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                      <label class="text-sm font-medium text-gray-700 cursor-pointer select-none flex items-center">
+                        <input type="checkbox" v-model="userInfoForm.drinking"
+                          class="form-checkbox h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary">
+                        <span class="ml-2">饮酒</span>
+                      </label>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                      <label class="text-sm font-medium text-gray-700 cursor-pointer select-none flex items-center">
+                        <input type="checkbox" v-model="userInfoForm.exercise"
+                          class="form-checkbox h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary">
+                        <span class="ml-2">规律运动</span>
+                      </label>
+                    </div>
+
+                    <div class="lg:col-span-3">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">喜好食物 (可多选)</label>
+                      <!-- 改进的多选组件 -->
+                      <div class="mt-1 flex flex-wrap gap-2">
+                        <label v-for="food in foodOptions" :key="food.value"
+                          class="inline-flex items-center px-3 py-1.5 rounded-full border cursor-pointer select-none text-sm transition-colors"
+                          :class="userInfoForm.foodTypes && userInfoForm.foodTypes.includes(food.value) ? 'bg-primary-light text-primary border-primary' : 'border-gray-300 text-gray-700'">
+                          <input type="checkbox" :value="food.value" v-model="userInfoForm.foodTypes" class="hidden">
+                          {{ food.label }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 按钮 -->
+              <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6">
+                <Button type="outline" @click="closeUserInfoDialog">取消</Button>
+                <Button type="primary" native-type="submit" :disabled="isFormSubmitting">
+                  <LoadingOne v-if="isFormSubmitting" theme="outline" size="18" :spin="true" class="mr-2" />
+                  {{ isFormSubmitting ? '提交中...' : '确定' }}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- 添加悬浮按钮 -->
+      <div class="fixed left-6 bottom-6 z-50">
+        <div class="relative group">
+          <Button 
+            type="primary" 
+            :icon="Edit" 
+            @click="showUserInfoDialog = true"
+            class="rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300"
+            aria-label="编辑健康信息">
+          </Button>
+          <div class="absolute left-full ml-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+            编辑健康信息
+          </div>
+        </div>
+      </div>
+
       <!-- 健康指数和身体数据卡片 -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- 健康指数卡片 -->
@@ -508,7 +672,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from '@/composables/vue-imports'
-import { getUserBodyInfo as getUserInfo, getHistoricalData } from '@/services/health.ts';
+import { getUserBodyInfo as getUserInfo, getHistoricalData, addBodyInformationNotes } from '@/services/health.ts';
 import * as echarts from 'echarts/core';
 import { LineChart } from 'echarts/charts';
 import {
@@ -518,6 +682,9 @@ import {
 import { CanvasRenderer } from 'echarts/renderers';
 import { UniversalTransition } from 'echarts/features';
 import type { EChartsOption } from 'echarts';
+import Button from '@/components/base/Button.vue';
+import InputField from '@/components/base/InputField.vue';
+import { Close, LoadingOne, Edit } from '@icon-park/vue-next';
 
 echarts.use([
   TitleComponent, TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, MarkLineComponent,
@@ -826,11 +993,31 @@ async function fetchUserHealthData() {
     if (response.data?.bodyList?.[0]) {
       bodyData.value = response.data.bodyList[0];
     } else {
-      error.value = '未找到用户健康数据';
+      // 没有找到用户健康数据，显示弹窗
+      error.value = '';  // 清除错误信息
+      showUserInfoDialog.value = true;
+      
+      // 尝试从缓存加载用户数据
+      try {
+        const cachedData = localStorage.getItem('healthDataCache');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          // 确保foodTypes是数组
+          if (typeof parsedData.foodTypes === 'string') {
+            parsedData.foodTypes = parsedData.foodTypes.split(',').filter(Boolean);
+          }
+          userInfoForm.value = { ...userInfoForm.value, ...parsedData };
+          console.log('已加载缓存的健康数据');
+        }
+      } catch (e) {
+        console.error('读取缓存数据失败:', e);
+      }
     }
   } catch (err) {
     console.error('获取健康数据失败:', err);
     error.value = '获取健康数据时发生错误，请稍后重试';
+  } finally {
+    isLoading.value = false;
   }
 }
 
@@ -1319,6 +1506,134 @@ const getHealthIndexText = (score: number): string => {
   if (score >= 80) return '优秀';
   if (score >= 60) return '良好';
   return '需要改善';
+};
+
+// 添加表单相关变量
+const showUserInfoDialog = ref(false);
+const isFormSubmitting = ref(false);
+const userInfoForm = ref<Partial<BodyDataType>>({
+  name: '',
+  age: null,
+  gender: '男',
+  height: null,
+  weight: null,
+  bloodSugar: null,
+  bloodPressure: '',
+  bloodLipid: '',
+  heartRate: null,
+  vision: null,
+  sleepDuration: null,
+  sleepQuality: 2, // 默认一般
+  smoking: false,
+  drinking: false,
+  exercise: false,
+  foodTypes: [],
+  waterConsumption: null,
+});
+
+const formErrors = ref<Record<string, string>>({});
+
+// 睡眠质量选项
+const sleepQualityOptions = [
+  { value: 1, label: '好' },
+  { value: 2, label: '一般' },
+  { value: 3, label: '差' },
+];
+
+// 食物选项
+const foodOptions = [
+  { value: '蔬菜', label: '蔬菜' },
+  { value: '水果', label: '水果' },
+  { value: '肉类', label: '肉类' },
+  { value: '鱼类', label: '鱼类' },
+  { value: '豆类', label: '豆类' },
+  { value: '谷物', label: '谷物' },
+  { value: '其他', label: '其他' },
+];
+
+// 表单验证
+const validateUserInfoForm = (): boolean => {
+  formErrors.value = {};
+  let isValid = true;
+
+  if (!userInfoForm.value.name || userInfoForm.value.name.length < 2 || userInfoForm.value.name.length > 20) {
+    formErrors.value.name = '姓名长度需在 2 到 20 个字符';
+    isValid = false;
+  }
+  if (userInfoForm.value.age === null || userInfoForm.value.age === undefined || userInfoForm.value.age <= 0 || userInfoForm.value.age > 150) {
+    formErrors.value.age = '请输入有效的年龄 (1-150)';
+    isValid = false;
+  }
+  if (!userInfoForm.value.gender) {
+    formErrors.value.gender = '请选择性别';
+    isValid = false;
+  }
+  if (userInfoForm.value.height === null || userInfoForm.value.height === undefined || userInfoForm.value.height <= 0 || userInfoForm.value.height > 300) {
+    formErrors.value.height = '请输入有效身高 (cm)';
+    isValid = false;
+  }
+  if (userInfoForm.value.weight === null || userInfoForm.value.weight === undefined || userInfoForm.value.weight <= 0 || userInfoForm.value.weight > 500) {
+    formErrors.value.weight = '请输入有效体重 (kg)';
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+// 关闭用户信息弹窗
+const closeUserInfoDialog = () => {
+  // 询问是否保存当前输入数据
+  if (userInfoForm.value.name || userInfoForm.value.height || userInfoForm.value.weight) {
+    const confirmed = window.confirm('是否保存当前输入的数据？下次填写时将自动加载。');
+    if (confirmed) {
+      try {
+        localStorage.setItem('healthDataCache', JSON.stringify(userInfoForm.value));
+      } catch (e) {
+        console.error('保存用户数据到缓存失败:', e);
+      }
+    }
+  }
+  showUserInfoDialog.value = false;
+};
+
+// 提交用户信息表单
+const submitUserInfoForm = async () => {
+  if (!validateUserInfoForm()) {
+    // 显示错误消息
+    error.value = '请检查表单填写是否正确';
+    return;
+  }
+
+  isFormSubmitting.value = true;
+  try {
+    const submissionData = { ...userInfoForm.value };
+    if (Array.isArray(submissionData.foodTypes)) {
+      submissionData.foodTypes = submissionData.foodTypes.join(',');
+    }
+
+    // 保存用户数据到localStorage
+    try {
+      localStorage.setItem('healthDataCache', JSON.stringify(userInfoForm.value));
+    } catch (e) {
+      console.error('保存用户数据到缓存失败:', e);
+    }
+
+    const response = await addBodyInformationNotes(submissionData);
+    
+    // 修复类型错误，确保从response.data获取code和message
+    if (response.data?.code === 20000) {
+      // 提交成功，关闭弹窗并重新获取数据
+      showUserInfoDialog.value = false;
+      await retryDataFetch();
+    } else {
+      error.value = response.data?.message || '添加健康信息失败';
+    }
+  } catch (err) {
+    console.error('提交表单失败:', err);
+    error.value = err instanceof Error ? err.message : '提交健康信息失败';
+  } finally {
+    isFormSubmitting.value = false;
+  }
 };
 </script>
 
